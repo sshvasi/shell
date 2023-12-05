@@ -8,6 +8,12 @@
 int main(void)
 {
     char buffer[BUFFER_SIZE];
+    char *word;
+
+    int word_index;
+    int buff_index;
+
+    bool space;
 
     while (true) {
         fputs("> ", stdout);
@@ -17,28 +23,45 @@ int main(void)
             if (feof(stdin)) {
                 exit(EXIT_SUCCESS);
             } else {
-                fprintf(stderr, "Cannot read a line.");
+                fputs("Cannot read a line.\n", stderr);
                 exit(EXIT_FAILURE);
             }
         }
 
-        if (buffer[strlen(buffer) - 1] == '\n') {
-            buffer[strlen(buffer) - 1] = '\0';
-        }
-
-        for (int i = 0; i < strlen(buffer); i++) {
-            switch (buffer[i]) {
+        for (buff_index = word_index = 0,
+             space = false,
+             word = malloc(BUFFER_SIZE);
+             buff_index < strlen(buffer);
+             buff_index++) {
+            switch (buffer[buff_index]) {
+                case '\n':
+                    word[word_index] = '\0';
+                    word_index = 0;
+                    space = false;
+                    printf("[%s]\n", word);
+                    free(word);
+                    word = malloc(BUFFER_SIZE);
+                    break;
                 case '\t':
                 case ' ':
-                    break;
-                case '"':
+                    if (!space) {
+                        word[word_index] = '\0';
+                        word_index = 0;
+                        space = true;
+                        printf("[%s]\n", word);
+                        free(word);
+                        word = malloc(BUFFER_SIZE);
+                    }
                     break;
                 default:
-                    printf("[%c]\n", buffer[i]);
+                    if (space)
+                        space = false;
+                    word[word_index++] = buffer[buff_index];
                     break;
             }
         }
     }
 
+    free(word);
     exit(EXIT_SUCCESS);
 }
