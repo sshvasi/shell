@@ -13,12 +13,12 @@ int main(void)
         fputs("> ", stdout);
         fflush(stdout);
 
-        if ((fgets(buffer, sizeof(buffer), stdin)) == NULL) {
+        if (fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
             if (feof(stdin)) {
-                return EXIT_SUCCESS;
+                exit(EXIT_SUCCESS);
             } else {
                 fprintf(stderr, "Cannot read a line.");
-                return EXIT_FAILURE;
+                exit(EXIT_FAILURE);
             }
         }
 
@@ -26,8 +26,19 @@ int main(void)
             buffer[strlen(buffer) - 1] = '\0';
         }
 
-        printf("[%s]\n", buffer);
+        for (int i = 0; i < strlen(buffer); i++) {
+            switch (buffer[i]) {
+                case '\t':
+                case ' ':
+                    break;
+                case '"':
+                    break;
+                default:
+                    printf("[%c]\n", buffer[i]);
+                    break;
+            }
+        }
     }
 
-    return EXIT_SUCCESS;
+    exit(EXIT_SUCCESS);
 }
