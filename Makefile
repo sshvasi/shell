@@ -14,10 +14,9 @@ CC := gcc
 CFLAGS := $(INC_FLAGS) -MMD -MP -Wall
 LDFLAGS :=
 
-# Verbose/Non-verbose build modes
 V := @
 
-REQUIRED_TOOLS := gcc find sed column mkdir rm
+REQUIRED_TOOLS := gcc find sed column mkdir rm tr
 $(foreach tool,$(REQUIRED_TOOLS),\
     $(if $(shell command -v $(tool)),,$(error "No $(tool) in $(PATH)")))
 
@@ -44,6 +43,25 @@ run: $(DST_DIR)/$(BIN)
 clean:
 	@rm -rf $(DST_DIR)
 
+## module: Create a new C module in the SRC_DIR (make module name=<module_name>).
+module:
+ifndef name
+	$(error name is not set. Usage: make module name=<module_name>)
+endif
+	@{ \
+	echo "#ifndef $(shell echo $(name) | tr a-z A-Z)_H"; \
+	echo "#define $(shell echo $(name) | tr a-z A-Z)_H"; \
+	echo ""; \
+	echo ""; \
+	echo ""; \
+	echo "#endif /* $(shell echo $(name) | tr a-z A-Z)_H */"; \
+	} > $(SRC_DIR)/$(name).h
+	@{ \
+	echo '#include "'$(name)'.h"'; \
+	echo ""; \
+	echo ""; \
+	} > $(SRC_DIR)/$(name).c
+
 ## help: Show this help message
 help:
 	@echo 'Targets:'
@@ -51,4 +69,4 @@ help:
 
 -include $(DEPS)
 
-.PHONY: all debug run clean help
+.PHONY: all debug run clean help module
