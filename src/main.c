@@ -36,9 +36,8 @@ int main(void) {
             }
         }
 
-        first_word = last_word = init_list();
-
-        for (buff_index = word_index = 0;
+        for (first_word = last_word = init_list(),
+             buff_index = word_index = 0;
              buff_index < strlen(buffer);
              buff_index++) {
             switch (buffer[buff_index]) {
