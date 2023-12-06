@@ -5,13 +5,27 @@
 
 #define BUFFER_SIZE 64
 
-char buffer[BUFFER_SIZE];
-
 enum state {
     normal,
     quote,
     escape
 };
+
+struct context {
+    char buffer[BUFFER_SIZE];
+
+    int prev_ch;
+    int curr_ch;
+
+    enum state prev_st;
+    enum state curr_st;
+
+    struct node *first_nd;
+    struct node *last_nd;
+
+    int word_idx;
+    int buff_idx;
+} ctx;
 
 static void repl_print_prompt()
 {
@@ -21,7 +35,7 @@ static void repl_print_prompt()
 
 static void repl_read_line()
 {
-    if (fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
+    if (fgets(ctx.buffer, BUFFER_SIZE, stdin) == NULL) {
         if (feof(stdin)) {
             exit(EXIT_SUCCESS);
         } else {
@@ -31,71 +45,85 @@ static void repl_read_line()
     }
 }
 
-static bool isdoublequote(int ch) { return ch == '"'; }
+static void repl_to_state(enum state st)
+{
+    ctx.prev_st = ctx.curr_st;
+    ctx.curr_st = st;
+}
 
-static bool isescape(int ch) { return ch == '\\'; }
+static void repl_process_normal(int ch)
+{
+    if (ctx.curr_ch == '"') {
+        repl_to_state(quote);
+    } else if (ctx.curr_ch == '\\') {
+        repl_to_state(escape);
+    } else if (!isspace(ctx.curr_ch)) {
+        ctx.last_nd->word[ctx.word_idx++] = ctx.curr_ch;
+    } else if (ctx.word_idx > 0) {
+        ctx.last_nd->word[ctx.word_idx] = '\0';
+        ctx.word_idx = 0;
+        list_add(&ctx.last_nd);
+    }
+}
+
+static void repl_process_quote(int ch)
+{
+    if (ctx.curr_ch == '"') {
+        if (ctx.prev_ch == '"') {
+            ctx.last_nd->word[ctx.word_idx++] = ' ';
+        }
+        repl_to_state(normal);
+    } else if (ctx.curr_ch == '\\') {
+        repl_to_state(escape);
+    } else {
+        ctx.last_nd->word[ctx.word_idx++] = ctx.curr_ch;
+    }
+}
+
+static void repl_process_escape(int ch)
+{
+    ctx.last_nd->word[ctx.word_idx++] = ctx.curr_ch;
+    repl_to_state(ctx.prev_st);
+}
+
+static void repl_process(int ch)
+{
+    ctx.curr_ch = ch;
+    switch (ctx.curr_st) {
+        case normal:
+            repl_process_normal(ch);
+            break;
+        case quote:
+            repl_process_quote(ch);
+            break;
+        case escape:
+            repl_process_escape(ch);
+            break;
+        default:
+            break;
+
+    }
+    ctx.prev_ch = ctx.curr_ch;
+}
 
 static void repl_parse_line()
 {
-    struct node *first_word, *last_word;
-    int word_index, buff_index;
-    enum state curr_state, prev_state;
-    char curr_char, prev_char;
+    ctx.first_nd = ctx.last_nd = list_init();
+    ctx.curr_st = ctx.prev_st = normal;
+    ctx.word_idx = 0;
 
-    first_word = last_word = list_init();
-    curr_state = prev_state = normal;
-    word_index = 0;
-
-    for (buff_index = 0;
-         buff_index < BUFFER_SIZE && buffer[buff_index] != '\0';
-         buff_index++) {
-        curr_char = buffer[buff_index];
-
-        switch (curr_state) {
-            case normal:
-                if (isdoublequote(curr_char)) {
-                    curr_state = quote;
-                } else if (isescape(curr_char)) {
-                    prev_state = curr_state;
-                    curr_state = escape;
-                } else if (!isspace(curr_char)) {
-                    last_word->word[word_index++] = curr_char;
-                } else if (word_index > 0) {
-                    last_word->word[word_index] = '\0';
-                    word_index = 0;
-                    list_add(&last_word);
-                }
-                break;
-            case quote:
-                if (isdoublequote(curr_char)) {
-                    if (isdoublequote(prev_char)) {
-                        last_word->word[word_index++] = ' ';
-                    }
-                    curr_state = normal;
-                } else if (isescape(curr_char)) {
-                    prev_state = curr_state;
-                    curr_state = escape;
-                } else {
-                    last_word->word[word_index++] = curr_char;
-                }
-                break;
-            case escape:
-                last_word->word[word_index++] = curr_char;
-                curr_state = prev_state;
-                break;
-            default:
-                break;
-        }
-
-        prev_char = curr_char;
+    for (ctx.buff_idx = 0;
+         ctx.buff_idx < BUFFER_SIZE && ctx.buffer[ctx.buff_idx];
+         ctx.buff_idx++) {
+        repl_process(ctx.buffer[ctx.buff_idx]);
     }
 
-    if (word_index > 0) {
-        last_word->word[word_index] = '\0';
-        list_add(&last_word);
+    if (ctx.word_idx > 0) {
+        ctx.last_nd->word[ctx.word_idx] = '\0';
+        list_add(&ctx.last_nd);
     }
 
-    list_term(first_word, curr_state == normal);
+    list_term(ctx.first_nd, ctx.curr_st == normal);
 }
 
 void repl_loop()
