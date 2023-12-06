@@ -41,11 +41,9 @@ static void repl_parse_line(struct node *list)
     int word_index, buff_index;
     enum state curr_state;
 
-    first_word = last_word = list;
-    buff_index = word_index = 0;
-    curr_state = normal;
-
-    for (buff_index = 0;
+    for (curr_state = normal,
+         first_word = last_word = list,
+         buff_index = word_index = 0;
          buff_index < BUFFER_SIZE && buffer[buff_index];
          buff_index++) {
         char ch = buffer[buff_index];
