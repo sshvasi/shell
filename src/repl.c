@@ -7,11 +7,11 @@
 
 char buffer[BUFFER_SIZE];
 
-enum state {
-    normal,
-    quote,
-    escape
-};
+enum state { normal, quote, escape };
+
+static bool isdoublequote(int ch) { return ch == '"'; }
+
+static bool isescape(int ch) { return ch == '\\'; }
 
 static void repl_print_prompt()
 {
@@ -31,20 +31,18 @@ static void repl_read_line()
     }
 }
 
-static bool isdoublequote(int ch) { return ch == '"'; }
-
-static bool isescape(int ch) { return ch == '\\'; }
-
-static void repl_parse_line(struct node *list)
+static void repl_parse_line()
 {
     struct node *first_word, *last_word;
     int word_index, buff_index;
     enum state curr_state;
 
-    for (curr_state = normal,
-         first_word = last_word = list,
-         buff_index = word_index = 0;
-         buff_index < BUFFER_SIZE && buffer[buff_index];
+    first_word = last_word = list_init();
+    curr_state = normal;
+    word_index = 0;
+
+    for (buff_index = 0;
+         buff_index < BUFFER_SIZE && buffer[buff_index] != '\0';
          buff_index++) {
         char ch = buffer[buff_index];
 
@@ -86,11 +84,11 @@ static void repl_parse_line(struct node *list)
     list_term(first_word, curr_state == normal);
 }
 
-void repl_loop(struct node *list)
+void repl_loop()
 {
     while (true) {
         repl_print_prompt();
         repl_read_line();
-        repl_parse_line(list);
+        repl_parse_line();
     }
 }

@@ -9,11 +9,17 @@ struct node *list_init()
 {
     struct node *head = malloc(sizeof(struct node));
     if (head == NULL) {
-        fputs("Failed to initialize list", stderr);
+        fputs("Failed to allocate memory for a new list\n", stderr);
         exit(EXIT_FAILURE);
     }
 
     head->word = malloc(WORD_SIZE);
+    if (head->word == NULL) {
+        fputs("Failed to allocate memory for a word in a new list\n", stderr);
+        free(head);
+        exit(EXIT_FAILURE);
+    }
+
     head->next = NULL;
 
     return head;
@@ -23,11 +29,17 @@ void list_add(struct node **tail)
 {
     struct node *new_node = malloc(sizeof(struct node));
     if (new_node == NULL) {
-        fputs("Failed to add new node to list", stderr);
+        fputs("Failed to allocate memory for a new node\n", stderr);
         exit(EXIT_FAILURE);
     }
 
     new_node->word = malloc(WORD_SIZE);
+    if (new_node->word == NULL) {
+        fputs("Failed to allocate memory for a word in a new node\n", stderr);
+        free(new_node);
+        exit(EXIT_FAILURE);
+    }
+
     new_node->next = NULL;
 
     (*tail)->next = new_node;
@@ -41,8 +53,10 @@ void list_term(struct node *head, bool success)
     }
 
     while (head) {
-        if (success && strlen(head->word) > 0) {
-            printf("[%s]\n", head->word);
+        if (success) {
+            if (strlen(head->word) > 0) {
+                printf("[%s]\n", head->word);
+            }
         }
 
         struct node *tmp = head->next;
