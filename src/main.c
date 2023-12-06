@@ -14,8 +14,8 @@ int main(void) {
     char buffer[BUFFER_SIZE];
 
     struct word_item *first_word;
+    struct word_item *last_word;
     struct word_item *new_word;
-    struct word_item *tmp_word;
 
     int word_index;
     int buff_index;
@@ -36,7 +36,8 @@ int main(void) {
         new_word = malloc(sizeof(struct word_item));
         new_word->word = malloc(BUFFER_SIZE);
         new_word->next = NULL;
-        first_word = new_word;
+
+        first_word = last_word = new_word;
 
         for (buff_index = word_index = 0;
              buff_index < strlen(buffer);
@@ -49,16 +50,18 @@ int main(void) {
                         break;
                     }
 
-                    first_word->word[word_index] = '\0';
+                    last_word->word[word_index] = '\0';
                     word_index = 0;
 
                     new_word = malloc(sizeof(struct word_item));
                     new_word->word = malloc(BUFFER_SIZE);
-                    new_word->next = first_word;
-                    first_word = new_word;
+                    new_word->next = NULL;
+
+                    last_word->next = new_word;
+                    last_word = new_word;
                     break;
                 default:
-                    first_word->word[word_index++] = buffer[buff_index];
+                    last_word->word[word_index++] = buffer[buff_index];
             }
         }
 
@@ -69,7 +72,7 @@ int main(void) {
                 puts("<empty word>");
             }
 
-            tmp_word = first_word->next;
+            struct word_item *tmp_word = first_word->next;
             free(first_word->word);
             free(first_word);
             first_word = tmp_word;
