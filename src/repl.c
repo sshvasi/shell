@@ -35,10 +35,10 @@ static void repl_parse_line()
 {
     struct node *first_word, *last_word;
     int word_index, buff_index;
-    enum state curr_state;
+    enum state curr_state, prev_state;
 
     first_word = last_word = list_init();
-    curr_state = normal;
+    curr_state = prev_state = normal;
     word_index = 0;
 
     for (buff_index = 0;
@@ -50,6 +50,9 @@ static void repl_parse_line()
             case normal:
                 if (isdoublequote(ch)) {
                     curr_state = quote;
+                } else if (isescape(ch)) {
+                    prev_state = curr_state;
+                    curr_state = escape;
                 } else if (!isspace(ch)) {
                     last_word->word[word_index++] = ch;
                 } else if (word_index > 0) {
@@ -62,6 +65,7 @@ static void repl_parse_line()
                 if (isdoublequote(ch)) {
                     curr_state = normal;
                 } else if (isescape(ch)) {
+                    prev_state = curr_state;
                     curr_state = escape;
                 } else {
                     last_word->word[word_index++] = ch;
@@ -69,7 +73,7 @@ static void repl_parse_line()
                 break;
             case escape:
                 last_word->word[word_index++] = ch;
-                curr_state = quote;
+                curr_state = prev_state;
                 break;
             default:
                 break;
