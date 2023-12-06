@@ -5,17 +5,20 @@
 
 #define BUFFER_SIZE 64
 
-struct word_item {
+struct node {
     char *word;
-    struct word_item *next;
+    struct node *next;
 };
+
+static struct node *init_list(void);
+static void add_to_list(struct node **tail);
+static void term_list(struct node*);
 
 int main(void) {
     char buffer[BUFFER_SIZE];
 
-    struct word_item *first_word;
-    struct word_item *last_word;
-    struct word_item *new_word;
+    struct node *first_word;
+    struct node *last_word;
 
     int word_index;
     int buff_index;
@@ -33,11 +36,7 @@ int main(void) {
             }
         }
 
-        new_word = malloc(sizeof(struct word_item));
-        new_word->word = malloc(BUFFER_SIZE);
-        new_word->next = NULL;
-
-        first_word = last_word = new_word;
+        first_word = last_word = init_list();
 
         for (buff_index = word_index = 0;
              buff_index < strlen(buffer);
@@ -53,31 +52,50 @@ int main(void) {
                     last_word->word[word_index] = '\0';
                     word_index = 0;
 
-                    new_word = malloc(sizeof(struct word_item));
-                    new_word->word = malloc(BUFFER_SIZE);
-                    new_word->next = NULL;
-
-                    last_word->next = new_word;
-                    last_word = new_word;
+                    add_to_list(&last_word);
                     break;
                 default:
                     last_word->word[word_index++] = buffer[buff_index];
             }
         }
 
-        while (first_word) {
-            if (strlen(first_word->word) > 0) {
-                printf("[%s]\n", first_word->word);
-            } else {
-                puts("<empty word>");
-            }
-
-            struct word_item *tmp_word = first_word->next;
-            free(first_word->word);
-            free(first_word);
-            first_word = tmp_word;
-        }
+        term_list(first_word);
     }
 
     exit(EXIT_SUCCESS);
+}
+
+static struct node *init_list(void)
+{
+    struct node *head = malloc(sizeof(struct node));
+    head->word = malloc(BUFFER_SIZE);
+    head->next = NULL;
+
+    return head;
+}
+
+static void add_to_list(struct node **tail)
+{
+    struct node *new_tail = malloc(sizeof(struct node));
+    new_tail->word = malloc(BUFFER_SIZE);
+    new_tail->next = NULL;
+
+    (*tail)->next = new_tail;
+    *tail = new_tail;
+}
+
+static void term_list(struct node *head)
+{
+    while (head) {
+        if (strlen(head->word) > 0) {
+            printf("[%s]\n", head->word);
+        } else {
+            puts("<empty word>");
+        }
+
+        struct node *tmp = head->next;
+        free(head->word);
+        free(head);
+        head = tmp;
+    }
 }
