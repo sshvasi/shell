@@ -36,6 +36,7 @@ static void repl_parse_line()
     struct node *first_word, *last_word;
     int word_index, buff_index;
     enum state curr_state, prev_state;
+    char curr_char, prev_char;
 
     first_word = last_word = list_init();
     curr_state = prev_state = normal;
@@ -44,17 +45,17 @@ static void repl_parse_line()
     for (buff_index = 0;
          buff_index < BUFFER_SIZE && buffer[buff_index] != '\0';
          buff_index++) {
-        char ch = buffer[buff_index];
+        curr_char = buffer[buff_index];
 
         switch (curr_state) {
             case normal:
-                if (isdoublequote(ch)) {
+                if (isdoublequote(curr_char)) {
                     curr_state = quote;
-                } else if (isescape(ch)) {
+                } else if (isescape(curr_char)) {
                     prev_state = curr_state;
                     curr_state = escape;
-                } else if (!isspace(ch)) {
-                    last_word->word[word_index++] = ch;
+                } else if (!isspace(curr_char)) {
+                    last_word->word[word_index++] = curr_char;
                 } else if (word_index > 0) {
                     last_word->word[word_index] = '\0';
                     word_index = 0;
@@ -62,22 +63,27 @@ static void repl_parse_line()
                 }
                 break;
             case quote:
-                if (isdoublequote(ch)) {
+                if (isdoublequote(curr_char)) {
+                    if (isdoublequote(prev_char)) {
+                        last_word->word[word_index++] = ' ';
+                    }
                     curr_state = normal;
-                } else if (isescape(ch)) {
+                } else if (isescape(curr_char)) {
                     prev_state = curr_state;
                     curr_state = escape;
                 } else {
-                    last_word->word[word_index++] = ch;
+                    last_word->word[word_index++] = curr_char;
                 }
                 break;
             case escape:
-                last_word->word[word_index++] = ch;
+                last_word->word[word_index++] = curr_char;
                 curr_state = prev_state;
                 break;
             default:
                 break;
         }
+
+        prev_char = curr_char;
     }
 
     if (word_index > 0) {

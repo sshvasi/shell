@@ -53,10 +53,8 @@ void list_term(struct node *head, bool success)
     }
 
     while (head) {
-        if (success) {
-            if (strlen(head->word) > 0) {
-                printf("[%s]\n", head->word);
-            }
+        if (success && strlen(head->word) > 0) {
+            printf("[%s]\n", head->word);
         }
 
         struct node *tmp = head->next;
