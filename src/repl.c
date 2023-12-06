@@ -7,11 +7,11 @@
 
 char buffer[BUFFER_SIZE];
 
-enum state { normal, quote, escape };
-
-static bool isdoublequote(int ch) { return ch == '"'; }
-
-static bool isescape(int ch) { return ch == '\\'; }
+enum state {
+    normal,
+    quote,
+    escape
+};
 
 static void repl_print_prompt()
 {
@@ -30,6 +30,10 @@ static void repl_read_line()
         }
     }
 }
+
+static bool isdoublequote(int ch) { return ch == '"'; }
+
+static bool isescape(int ch) { return ch == '\\'; }
 
 static void repl_parse_line()
 {
