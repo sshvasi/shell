@@ -1,16 +1,14 @@
 #ifndef REPL_H
 #define REPL_H
 
+#include <stdio.h>
 #include "list.h"
 
 #define BUFFER_SIZE 1024
 
 struct context {
-    char buffer[BUFFER_SIZE + 1];
     char word[BUFFER_SIZE + 1];
-
     int word_idx;
-    int buff_idx;
 };
 
 enum state {
@@ -24,7 +22,8 @@ enum event {
     escape_ch = '\\',
     space_ch = ' ',
     tab_ch = '\t',
-    nl_ch = '\n'
+    nl_ch = '\n',
+    eof = EOF
     /* default = any character */
 };
 

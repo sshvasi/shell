@@ -15,46 +15,28 @@ static enum state process_escape(enum event ev);
 
 static void process(enum event ev);
 
-static void repl_print_prompt(void);
-static void repl_parse_line(void);
-static void repl_read_line(void);
-
 void init_repl()
 {
     while (true) {
-        repl_print_prompt();
-        repl_read_line();
-        repl_parse_line();
-    }
-}
+        fputs("> ", stdout);
+        fflush(stdout);
 
-static void repl_print_prompt(void)
-{
-    fputs("> ", stdout);
-    fflush(stdout);
-}
+        int ch;
+        list = init_list();
+        ctx.word_idx = 0;
 
-static void repl_read_line(void)
-{
-    if (fgets(ctx.buffer, BUFFER_SIZE, stdin) == NULL) {
-        if (feof(stdin)) {
-            exit(EXIT_SUCCESS);
-        } else {
-            fputs("Failed to read a line.\n", stderr);
-            exit(EXIT_FAILURE);
+        while ((ch = getchar()) != '\n' && ch != EOF) {
+            process(ch);
         }
-    }
-}
 
-static void repl_parse_line(void)
-{
-    list = init_list();
-    ctx.word_idx = 0;
-
-    for (ctx.buff_idx = 0;
-         ctx.buff_idx < BUFFER_SIZE && ctx.buffer[ctx.buff_idx];
-         ctx.buff_idx++) {
-        process(ctx.buffer[ctx.buff_idx]);
+        if (ch == '\n') {
+            process(ch);
+            continue;
+        }
+        if (ch == EOF) {
+            process(ch);
+            break;
+        }
     }
 }
 
@@ -94,6 +76,9 @@ static enum state process_normal(enum event ev)
             ctx.word_idx = 0;
             add_to_list(list, ctx.word);
             return normal;
+        case EOF:
+            free_list(list);
+            return normal;
         default:
             ctx.word[ctx.word_idx++] = ev;
             return normal;
@@ -111,6 +96,9 @@ static enum state process_quote(enum event ev)
             fputs("Failed to parse a line: incorrect number of quotes.\n", stderr);
             free_list(list);
             return normal;
+        case EOF:
+            free_list(list);
+            return normal;
         case space_ch:
         case tab_ch:
         default:
@@ -121,6 +109,12 @@ static enum state process_quote(enum event ev)
 
 static enum state process_escape(enum event ev)
 {
-    ctx.word[ctx.word_idx++] = ev;
-    return prev_st;
+    switch (ev) {
+    case EOF:
+        free_list(list);
+        return normal;
+    default:
+        ctx.word[ctx.word_idx++] = ev;
+        return prev_st;
+    }
 }
