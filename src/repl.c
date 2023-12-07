@@ -60,7 +60,7 @@ static void repl_parse_line(void)
 
 static void process(enum event ev)
 {
-    const processor processors[] = {
+    static const processor processors[] = {
         process_normal,
         process_quote,
         process_escape
