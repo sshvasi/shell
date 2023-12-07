@@ -1,48 +1,25 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "repl.h"
 
-#define BUFFER_SIZE 64
-
-struct context {
-    char buffer[BUFFER_SIZE];
-
-    struct node *first_nd;
-    struct node *last_nd;
-
-    int word_idx;
-    int buff_idx;
-} ctx;
-
-enum state {
-    normal,
-    quote,
-    escape
-} prev_st = normal, curr_st = normal;
-
-enum event {
-    quote_ch = '"',
-    escape_ch = '\\',
-    space_ch = ' ',
-    tab_ch = '\t',
-    nl_ch = '\n'
-    /* default = any character */
-} prev_ev, curr_ev;
-
-typedef enum state (*processor)(enum event);
-
-static void repl_print_prompt(void);
-static void repl_read_line(void);
-static void repl_parse_line(void);
-
-static void process(enum event ev);
+struct list *list;
+struct context ctx;
+enum event prev_ev, curr_ev;
+enum state prev_st = normal, curr_st = normal;
 
 static enum state process_normal(enum event ev);
 static enum state process_quote(enum event ev);
 static enum state process_escape(enum event ev);
 
-void repl_loop()
+static void process(enum event ev);
+
+static void repl_print_prompt(void);
+static void repl_parse_line(void);
+static void repl_read_line(void);
+
+void init_repl()
 {
     while (true) {
         repl_print_prompt();
@@ -63,7 +40,7 @@ static void repl_read_line(void)
         if (feof(stdin)) {
             exit(EXIT_SUCCESS);
         } else {
-            fputs("Cannot read a line.\n", stderr);
+            fputs("Failed to read a line.\n", stderr);
             exit(EXIT_FAILURE);
         }
     }
@@ -71,7 +48,7 @@ static void repl_read_line(void)
 
 static void repl_parse_line(void)
 {
-    ctx.first_nd = ctx.last_nd = list_init();
+    list = init_list();
     ctx.word_idx = 0;
 
     for (ctx.buff_idx = 0;
@@ -79,13 +56,6 @@ static void repl_parse_line(void)
          ctx.buff_idx++) {
         process(ctx.buffer[ctx.buff_idx]);
     }
-
-    if (ctx.word_idx > 0) {
-        ctx.last_nd->word[ctx.word_idx] = '\0';
-        list_add(&ctx.last_nd);
-    }
-
-    list_term(ctx.first_nd, curr_st == normal);
 }
 
 static void process(enum event ev)
@@ -111,17 +81,21 @@ static enum state process_normal(enum event ev)
             return quote;
         case escape_ch:
             return escape;
+        case nl_ch:
+            ctx.word[ctx.word_idx] = '\0';
+            ctx.word_idx = 0;
+            add_to_list(list, ctx.word);
+            print_list(list);
+            free_list(list);
+            return normal;
         case space_ch:
         case tab_ch:
-        case nl_ch:
-            if (ctx.word_idx > 0) {
-                ctx.last_nd->word[ctx.word_idx] = '\0';
-                ctx.word_idx = 0;
-                list_add(&ctx.last_nd);
-            }
+            ctx.word[ctx.word_idx] = '\0';
+            ctx.word_idx = 0;
+            add_to_list(list, ctx.word);
             return normal;
         default:
-            ctx.last_nd->word[ctx.word_idx++] = ev;
+            ctx.word[ctx.word_idx++] = ev;
             return normal;
     }
 }
@@ -130,30 +104,23 @@ static enum state process_quote(enum event ev)
 {
     switch (ev) {
         case quote_ch:
-            if (prev_ev == quote_ch)
-                ctx.last_nd->word[ctx.word_idx++] = ' ';
             return normal;
         case escape_ch:
             return escape;
+        case nl_ch:
+            fputs("Failed to parse a line: incorrect number of quotes.\n", stderr);
+            free_list(list);
+            return normal;
         case space_ch:
         case tab_ch:
-        case nl_ch:
         default:
-            ctx.last_nd->word[ctx.word_idx++] = ev;
+            ctx.word[ctx.word_idx++] = ev;
             return quote;
     }
 }
 
 static enum state process_escape(enum event ev)
 {
-    switch (ev) {
-        case quote_ch:
-        case escape_ch:
-        case space_ch:
-        case tab_ch:
-        case nl_ch:
-        default:
-            ctx.last_nd->word[ctx.word_idx++] = ev;
-            return prev_st;
-    }
+    ctx.word[ctx.word_idx++] = ev;
+    return prev_st;
 }

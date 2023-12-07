@@ -1,66 +1,88 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "list.h"
 
-#define WORD_SIZE 64
-
-struct node *list_init()
+struct list *init_list()
 {
-    struct node *head = malloc(sizeof(struct node));
-    if (head == NULL) {
-        fputs("Failed to allocate memory for a new list\n", stderr);
-        exit(EXIT_FAILURE);
+    struct list *list;
+    if ((list = malloc(sizeof(struct list))) == NULL) {
+        perror("Failed to allocate memory for list.");
+        return NULL;
     }
 
-    head->word = malloc(WORD_SIZE);
-    if (head->word == NULL) {
-        fputs("Failed to allocate memory for a word in a new list\n", stderr);
-        free(head);
-        exit(EXIT_FAILURE);
-    }
+    list->head = list->tail = NULL;
 
-    head->next = NULL;
-
-    return head;
+    return list;
 }
 
-void list_add(struct node **tail)
+void add_to_list(struct list *list, const char *word)
 {
-    struct node *new_node = malloc(sizeof(struct node));
-    if (new_node == NULL) {
-        fputs("Failed to allocate memory for a new node\n", stderr);
-        exit(EXIT_FAILURE);
+    if (list == NULL) {
+        return;
     }
 
-    new_node->word = malloc(WORD_SIZE);
-    if (new_node->word == NULL) {
-        fputs("Failed to allocate memory for a word in a new node\n", stderr);
+    int word_size = strlen(word);
+    if (word_size >= MAX_WORD_SIZE) {
+        fprintf(stderr,
+                "Failed to add new word: not enough size. "
+                "Max: %d, provided: %d.\n",
+                MAX_WORD_SIZE, word_size);
+        return;
+    }
+    if (word_size == 0) {
+        /* fprintf(stderr, "Failed to add new word: word is empty.\n"); */
+        return;
+    }
+
+    struct node *new_node;
+    if ((new_node = malloc(sizeof(struct node))) == NULL) {
+        perror("Failed to allocate memory for new node.");
+        return;
+    }
+
+
+    if ((new_node->word = malloc(word_size + 1)) == NULL) {
         free(new_node);
-        exit(EXIT_FAILURE);
+        perror("Failed to allocate memory for new word.");
+        return;
     }
 
     new_node->next = NULL;
+    strcpy(new_node->word, word);
 
-    (*tail)->next = new_node;
-    *tail = new_node;
+    if (list->head == NULL) {
+        list->head = list->tail = new_node;
+    } else {
+        list->tail->next = new_node;
+        list->tail = new_node;
+    }
 }
 
-void list_term(struct node *head, bool success)
+void free_list(struct list *list)
 {
-    if (!success) {
-        fputs("Syntax error. Incorrect number of quotes.\n", stderr);
+    if (list == NULL) {
+        fputs("Failed to free list: NULL pointer received.\n", stderr);
+        return;
     }
 
-    while (head) {
-        if (success && strlen(head->word) > 0) {
-            printf("[%s]\n", head->word);
-        }
+    struct node *current = list->head;
+    struct node *next;
 
-        struct node *tmp = head->next;
-        free(head->word);
-        free(head);
-        head = tmp;
+    while (current != NULL) {
+        next = current->next;
+        free(current->word);
+        free(current);
+        current = next;
     }
+
+    free(list);
 }
 
+void print_list(struct list *list)
+{
+    struct node *iter;
+
+    for (iter = list->head; iter; iter = iter->next)
+        printf("[%s]\n", iter->word);
+}

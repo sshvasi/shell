@@ -1,7 +1,8 @@
 #include <stdlib.h>
+#include "list.h"
 #include "repl.h"
 
 int main(void) {
-    repl_loop();
+    init_repl();
     exit(EXIT_SUCCESS);
 }
