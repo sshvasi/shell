@@ -4,13 +4,6 @@
 #include <stdio.h>
 #include "list.h"
 
-#define BUFFER_SIZE 1024
-
-struct context {
-    char word[BUFFER_SIZE + 1];
-    int word_idx;
-};
-
 enum state {
     normal,
     quote,

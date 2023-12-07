@@ -3,17 +3,18 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "repl.h"
+#include "buffer.h"
 
 struct list *list;
-struct context ctx;
+struct buffer *buff;
+
 enum event prev_ev, curr_ev;
 enum state prev_st = normal, curr_st = normal;
 
+static void process(enum event ev);
 static enum state process_normal(enum event ev);
 static enum state process_quote(enum event ev);
 static enum state process_escape(enum event ev);
-
-static void process(enum event ev);
 
 void init_repl()
 {
@@ -23,7 +24,7 @@ void init_repl()
 
         int ch;
         list = init_list();
-        ctx.word_idx = 0;
+        buff = init_buffer();
 
         while ((ch = getchar()) != '\n' && ch != EOF) {
             process(ch);
@@ -33,6 +34,7 @@ void init_repl()
             process(ch);
             continue;
         }
+
         if (ch == EOF) {
             process(ch);
             break;
@@ -64,23 +66,22 @@ static enum state process_normal(enum event ev)
         case escape_ch:
             return escape;
         case nl_ch:
-            ctx.word[ctx.word_idx] = '\0';
-            ctx.word_idx = 0;
-            add_to_list(list, ctx.word);
+            add_to_list(list, buff->store);
+            empty_buffer(buff);
             print_list(list);
             free_list(list);
             return normal;
         case space_ch:
         case tab_ch:
-            ctx.word[ctx.word_idx] = '\0';
-            ctx.word_idx = 0;
-            add_to_list(list, ctx.word);
+            add_to_list(list, buff->store);
+            empty_buffer(buff);
             return normal;
         case EOF:
             free_list(list);
+            free_buffer(buff);
             return normal;
         default:
-            ctx.word[ctx.word_idx++] = ev;
+            add_to_buffer(buff, ev);
             return normal;
     }
 }
@@ -98,11 +99,12 @@ static enum state process_quote(enum event ev)
             return normal;
         case EOF:
             free_list(list);
+            free_buffer(buff);
             return normal;
         case space_ch:
         case tab_ch:
         default:
-            ctx.word[ctx.word_idx++] = ev;
+            add_to_buffer(buff, ev);
             return quote;
     }
 }
@@ -112,9 +114,10 @@ static enum state process_escape(enum event ev)
     switch (ev) {
     case EOF:
         free_list(list);
+        free_buffer(buff);
         return normal;
     default:
-        ctx.word[ctx.word_idx++] = ev;
+        add_to_buffer(buff, ev);
         return prev_st;
     }
 }

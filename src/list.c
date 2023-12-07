@@ -19,6 +19,7 @@ struct list *init_list()
 void add_to_list(struct list *list, const char *word)
 {
     if (list == NULL) {
+        fputs("Failed to add to list: NULL pointer received.\n", stderr);
         return;
     }
 
@@ -81,6 +82,11 @@ void free_list(struct list *list)
 
 void print_list(struct list *list)
 {
+    if (list == NULL) {
+        fputs("Failed to print list: NULL pointer received.\n", stderr);
+        return;
+    }
+
     struct node *iter;
 
     for (iter = list->head; iter; iter = iter->next)
