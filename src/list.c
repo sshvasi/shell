@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "debug.h"
 #include "list.h"
 
 struct list *init_list()
@@ -13,11 +14,14 @@ struct list *init_list()
 
     list->head = list->tail = NULL;
 
+    TRACE("[LIST] Initilize.\n");
+
     return list;
 }
 
 void add_to_list(struct list *list, const char *word)
 {
+    TRACE("[LIST] Add '%s'.\n", word);
     if (list == NULL) {
         fputs("Failed to add to list: NULL pointer received.\n", stderr);
         return;
@@ -32,7 +36,7 @@ void add_to_list(struct list *list, const char *word)
         return;
     }
     if (word_size == 0) {
-        /* fprintf(stderr, "Failed to add new word: word is empty.\n"); */
+        TRACE("[LIST] Failed to add new word: word is empty.\n");
         return;
     }
 
@@ -60,28 +64,43 @@ void add_to_list(struct list *list, const char *word)
     }
 }
 
+void empty_list(struct list *list)
+{
+    TRACE("[LIST] Empty.\n");
+    if (list == NULL) {
+        fputs("Failed to empty list: NULL pointer received.\n", stderr);
+        return;
+    }
+
+    struct node *curr = list->head;
+    struct node *next;
+
+    while (curr != NULL) {
+        next = curr->next;
+        TRACE("[LIST] Free node '%s'.\n", curr->word);
+        free(curr->word);
+        free(curr);
+        curr = next;
+    }
+
+    list->head = NULL;
+}
+
 void free_list(struct list *list)
 {
+    TRACE("[LIST] Free.\n");
     if (list == NULL) {
         fputs("Failed to free list: NULL pointer received.\n", stderr);
         return;
     }
 
-    struct node *current = list->head;
-    struct node *next;
-
-    while (current != NULL) {
-        next = current->next;
-        free(current->word);
-        free(current);
-        current = next;
-    }
-
+    empty_list(list);
     free(list);
 }
 
 void print_list(struct list *list)
 {
+    TRACE("[LIST] Print.\n");
     if (list == NULL) {
         fputs("Failed to print list: NULL pointer received.\n", stderr);
         return;

@@ -16,6 +16,7 @@ struct list {
 struct list *init_list();
 void add_to_list(struct list *list, const char *word);
 void print_list(struct list *list);
+void empty_list(struct list *list);
 void free_list(struct list *list);
 
 #endif /* LIST_H */

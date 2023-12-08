@@ -1,10 +1,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "debug.h"
 #include "buffer.h"
 
 struct buffer *init_buffer()
 {
+    TRACE("[BUFFER] Initilize.\n");
+
     struct buffer *b;
     if ((b = malloc(sizeof(struct buffer))) == NULL) {
         perror("Failed to allocate memory for buffer.");
@@ -26,13 +29,15 @@ struct buffer *init_buffer()
 
 void add_to_buffer(struct buffer *b, int ch)
 {
+    TRACE("[BUFFER] Add '%c'\n", ch);
+
     if (b == NULL) {
         fputs("Failed to add to buffer: NULL pointer received.\n", stderr);
         return;
     }
 
     if (b->length == b->capacity - 1) {
-        fputs("Buffer is full. Resizing.\n", stderr);
+        TRACE("Buffer is full with length %d. Resizing.\n", b->length);
 
         char *new_store;
         if ((new_store = malloc(b->capacity * 2)) == NULL) {
@@ -53,6 +58,8 @@ void add_to_buffer(struct buffer *b, int ch)
 
 void empty_buffer(struct buffer *b)
 {
+    TRACE("[BUFFER] Empty '%s'.\n", b->store);
+
     if (b == NULL) {
         fputs("Failed to empty buffer: NULL pointer received.\n", stderr);
         return;
@@ -64,6 +71,8 @@ void empty_buffer(struct buffer *b)
 
 void free_buffer(struct buffer *b)
 {
+    TRACE("[BUFFER] Free '%s'.\n", b->store);
+
     if (b == NULL) {
         fputs("Failed to free buffer: NULL pointer received.\n", stderr);
         return;

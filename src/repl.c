@@ -18,14 +18,14 @@ static enum state process_escape(enum event ev);
 
 void init_repl()
 {
+    list = init_list();
+    buff = init_buffer();
+
     while (true) {
         fputs("> ", stdout);
         fflush(stdout);
 
         int ch;
-        list = init_list();
-        buff = init_buffer();
-
         while ((ch = getchar()) != '\n' && ch != EOF) {
             process(ch);
         }
@@ -69,7 +69,7 @@ static enum state process_normal(enum event ev)
             add_to_list(list, buff->store);
             empty_buffer(buff);
             print_list(list);
-            free_list(list);
+            empty_list(list);
             return normal;
         case space_ch:
         case tab_ch:
@@ -77,8 +77,8 @@ static enum state process_normal(enum event ev)
             empty_buffer(buff);
             return normal;
         case EOF:
-            free_list(list);
             free_buffer(buff);
+            free_list(list);
             return normal;
         default:
             add_to_buffer(buff, ev);
@@ -95,11 +95,11 @@ static enum state process_quote(enum event ev)
             return escape;
         case nl_ch:
             fputs("Failed to parse a line: incorrect number of quotes.\n", stderr);
-            free_list(list);
+            empty_list(list);
             return normal;
         case EOF:
-            free_list(list);
             free_buffer(buff);
+            free_list(list);
             return normal;
         case space_ch:
         case tab_ch:
@@ -113,8 +113,8 @@ static enum state process_escape(enum event ev)
 {
     switch (ev) {
     case EOF:
-        free_list(list);
         free_buffer(buff);
+        free_list(list);
         return normal;
     default:
         add_to_buffer(buff, ev);
