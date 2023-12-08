@@ -37,13 +37,15 @@ void add_to_list(struct list *list, const struct buffer *buff)
     struct node *new_node;
     if ((new_node = malloc(sizeof(struct node))) == NULL) {
         perror("Failed to allocate memory for new node.");
+        free_list(list);
         exit(EXIT_FAILURE);
     }
 
 
     if ((new_node->word = malloc(buff->length)) == NULL) {
-        free(new_node);
         perror("Failed to allocate memory for new word.");
+        free(new_node);
+        free_list(list);
         exit(EXIT_FAILURE);
     }
 

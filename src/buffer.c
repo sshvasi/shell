@@ -36,7 +36,7 @@ void resize_buffer(struct buffer *b)
     char *new_store;
     if ((new_store = malloc(b->capacity * 2)) == NULL) {
         perror("Failed to allocate memory for buffer store during resizing.");
-        free(b);
+        free_buffer(b);
         exit(EXIT_FAILURE);
     }
 
