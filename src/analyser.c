@@ -56,8 +56,8 @@ static enum state handle_normal_state(enum event next_event,
             return state_escape;
         case event_newline:
             add_to_list(ls, buff);
+            execute(ls, buff);
             empty_buffer(buff);
-            execute(ls);
             empty_list(ls);
             print_prompt(singleline_prompt);
             return state_normal;

@@ -1,5 +1,5 @@
-#ifndef TOKENIZER_H
-#define TOKENIZER_H
+#ifndef ANALYSER_H
+#define ANALYSER_H
 
 #include "buffer.h"
 #include "list.h"
@@ -23,4 +23,4 @@ typedef enum state (*handler)(enum event, struct list *, struct buffer *);
 
 void analyse(enum event, struct list *, struct buffer *);
 
-#endif /* TOKENIZER_H */
+#endif /* ANALYSER_H */

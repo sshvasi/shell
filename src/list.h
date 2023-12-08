@@ -4,7 +4,7 @@
 #include "buffer.h"
 
 struct node {
-    char *word;
+    char *token;
     struct node *next;
 };
 
@@ -14,7 +14,7 @@ struct list {
 };
 
 struct list *init_list();
-void add_to_list(struct list *, const struct buffer *);
+void add_to_list(struct list *, struct buffer *);
 void empty_list(struct list *);
 void free_list(struct list *);
 void for_each_node(struct list *, void (*)(struct node *));

@@ -21,7 +21,7 @@ struct list *init_list()
     return list;
 }
 
-void add_to_list(struct list *list, const struct buffer *buff)
+void add_to_list(struct list *list, struct buffer *buff)
 {
     TRACE("[LIST] Add '%s'.\n", buff->store);
     if (list == NULL) {
@@ -37,20 +37,22 @@ void add_to_list(struct list *list, const struct buffer *buff)
     struct node *new_node;
     if ((new_node = malloc(sizeof(struct node))) == NULL) {
         perror("Failed to allocate memory for new node.");
+        free_buffer(buff);
         free_list(list);
         exit(EXIT_FAILURE);
     }
 
 
-    if ((new_node->word = malloc(buff->length)) == NULL) {
+    if ((new_node->token = malloc(buff->length)) == NULL) {
         perror("Failed to allocate memory for new word.");
+        free_buffer(buff);
         free(new_node);
         free_list(list);
         exit(EXIT_FAILURE);
     }
 
     new_node->next = NULL;
-    strcpy(new_node->word, buff->store);
+    strcpy(new_node->token, buff->store);
 
     if (list->head == NULL) {
         list->head = list->tail = new_node;
@@ -62,7 +64,6 @@ void add_to_list(struct list *list, const struct buffer *buff)
 
 void empty_list(struct list *list)
 {
-    TRACE("[LIST] Empty.\n");
     if (list == NULL) {
         fputs("Failed to empty list: NULL pointer received.\n", stderr);
         return;
@@ -71,10 +72,12 @@ void empty_list(struct list *list)
     struct node *curr = list->head;
     struct node *next;
 
+    TRACE("[LIST] Empty%c\n", curr == NULL ? '.' : ':');
+
     while (curr != NULL) {
         next = curr->next;
-        TRACE("[LIST] Free node '%s'.\n", curr->word);
-        free(curr->word);
+        TRACE("\tFree node '%s'.\n", curr->token);
+        free(curr->token);
         free(curr);
         curr = next;
     }
@@ -96,14 +99,13 @@ void free_list(struct list *list)
 
 void for_each_node(struct list *list, void (*handler)(struct node *))
 {
-    TRACE("[LIST] For each.\n");
     if (list == NULL) {
         fputs("Failed to iterate over list: NULL pointer received.\n", stderr);
         return;
     }
 
-    struct node *iter;
-    for (iter = list->head; iter; iter = iter->next) {
-        (*handler)(iter);
+    struct node *curr;
+    for (curr = list->head; curr != NULL; curr = curr->next) {
+        (*handler)(curr);
     }
 }
