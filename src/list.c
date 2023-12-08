@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "buffer.h"
 #include "debug.h"
 #include "list.h"
 
@@ -19,23 +21,15 @@ struct list *init_list()
     return list;
 }
 
-void add_to_list(struct list *list, const char *word)
+void add_to_list(struct list *list, const struct buffer *buff)
 {
-    TRACE("[LIST] Add '%s'.\n", word);
+    TRACE("[LIST] Add '%s'.\n", buff->store);
     if (list == NULL) {
         fputs("Failed to add to list: NULL pointer received.\n", stderr);
         return;
     }
 
-    int word_size = strlen(word);
-    if (word_size >= MAX_WORD_SIZE) {
-        fprintf(stderr,
-                "Failed to add new word: not enough size. "
-                "Max: %d, provided: %d.\n",
-                MAX_WORD_SIZE, word_size);
-        return;
-    }
-    if (word_size == 0) {
+    if (buff->length == 0) {
         TRACE("[LIST] Failed to add new word: word is empty.\n");
         return;
     }
@@ -47,14 +41,14 @@ void add_to_list(struct list *list, const char *word)
     }
 
 
-    if ((new_node->word = malloc(word_size + 1)) == NULL) {
+    if ((new_node->word = malloc(buff->length)) == NULL) {
         free(new_node);
         perror("Failed to allocate memory for new word.");
         return;
     }
 
     new_node->next = NULL;
-    strcpy(new_node->word, word);
+    strcpy(new_node->word, buff->store);
 
     if (list->head == NULL) {
         list->head = list->tail = new_node;

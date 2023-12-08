@@ -28,6 +28,24 @@ struct buffer *init_buffer()
     return b;
 }
 
+void resize_buffer(struct buffer *b)
+{
+    TRACE("Buffer is full with length %d. Resizing to %d.\n",
+          b->length, b->length * 2);
+
+    char *new_store;
+    if ((new_store = malloc(b->capacity * 2)) == NULL) {
+        perror("Failed to allocate memory for buffer store during resizing.");
+        free(b);
+        exit(EXIT_FAILURE);
+    }
+
+    strcpy(new_store, b->store);
+    free(b->store);
+    b->store = new_store;
+    b->capacity *= 2;
+}
+
 void add_to_buffer(struct buffer *b, int ch)
 {
     TRACE("[BUFFER] Add '%c'\n", ch);
@@ -38,19 +56,7 @@ void add_to_buffer(struct buffer *b, int ch)
     }
 
     if (b->length == b->capacity - 1) {
-        TRACE("Buffer is full with length %d. Resizing.\n", b->length);
-
-        char *new_store;
-        if ((new_store = malloc(b->capacity * 2)) == NULL) {
-            perror("Failed to allocate memory for buffer store during resizing.");
-            free(b);
-            exit(EXIT_FAILURE);
-        }
-
-        strcpy(new_store, b->store);
-        free(b->store);
-        b->store = new_store;
-        b->capacity *= 2;
+        resize_buffer(b);
     }
 
     b->store[b->length++] = ch;

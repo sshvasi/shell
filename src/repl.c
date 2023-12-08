@@ -47,14 +47,14 @@ static enum state handle_normal_state(enum event ev,
         case event_escape:
             return state_escape;
         case event_newline:
-            add_to_list(ls, buff->store);
+            add_to_list(ls, buff);
             empty_buffer(buff);
             print_list(ls);
             empty_list(ls);
             return state_normal;
         case event_space:
         case event_tab:
-            add_to_list(ls, buff->store);
+            add_to_list(ls, buff);
             empty_buffer(buff);
             return state_normal;
         case event_eof:

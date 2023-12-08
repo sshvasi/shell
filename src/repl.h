@@ -22,7 +22,9 @@ enum event {
     /* default = any character */
 };
 
-typedef enum state (*handler)(enum event, struct list*, struct buffer*);
+typedef enum state (*handler)(enum event,
+                              struct list*,
+                              struct buffer*);
 
 void init_repl(struct list*, struct buffer*);
 

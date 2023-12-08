@@ -1,7 +1,7 @@
 #ifndef LIST_H
 #define LIST_H
 
-#define MAX_WORD_SIZE 1024
+#include "buffer.h"
 
 struct node {
     char *word;
@@ -14,7 +14,7 @@ struct list {
 };
 
 struct list *init_list();
-void add_to_list(struct list *list, const char *word);
+void add_to_list(struct list *list, const struct buffer*);
 void print_list(struct list *list);
 void empty_list(struct list *list);
 void free_list(struct list *list);
