@@ -31,6 +31,7 @@ void init_repl(struct list *ls, struct buffer *buff)
         }
 
         if (ch == EOF) {
+            putchar('\n');
             handle(ch, ls, buff);
             break;
         }
@@ -57,7 +58,7 @@ static enum state handle_normal_state(enum event ev,
             add_to_list(ls, buff->store);
             empty_buffer(buff);
             return state_normal;
-        case EOF:
+        case event_eof:
             free_buffer(buff);
             free_list(ls);
             return state_normal;
@@ -80,7 +81,7 @@ static enum state handle_quote_state(enum event ev,
             fputs("Failed to parse a line: incorrect number of quotes.\n", stderr);
             empty_list(ls);
             return state_normal;
-        case EOF:
+        case event_eof:
             free_buffer(buff);
             free_list(ls);
             return state_normal;
@@ -97,7 +98,7 @@ static enum state handle_escape_state(enum event ev,
                                       struct buffer *buff)
 {
     switch (ev) {
-    case EOF:
+    case event_eof:
         free_buffer(buff);
         free_list(ls);
         return state_normal;
