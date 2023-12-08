@@ -43,7 +43,7 @@ void add_to_list(struct list *list, struct buffer *buff)
     }
 
 
-    if ((new_node->token = malloc(buff->length)) == NULL) {
+    if ((new_node->token = malloc(buff->length + 1)) == NULL) {
         perror("Failed to allocate memory for new word.");
         free_buffer(buff);
         free(new_node);
