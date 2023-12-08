@@ -7,5 +7,6 @@
 int main(void) {
     init_repl(init_list(),
               init_buffer());
-    exit(EXIT_SUCCESS);
+
+    return EXIT_SUCCESS;
 }
