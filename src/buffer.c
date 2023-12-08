@@ -30,8 +30,8 @@ struct buffer *init_buffer()
 
 void resize_buffer(struct buffer *b)
 {
-    TRACE("Buffer is full with length %d. Resizing to %d.\n",
-          b->length, b->length * 2);
+    TRACE("[BUFFER] Buffer is full with capacity %d. Resizing to %d.\n",
+          b->capacity, b->capacity * 2);
 
     char *new_store;
     if ((new_store = malloc(b->capacity * 2)) == NULL) {
