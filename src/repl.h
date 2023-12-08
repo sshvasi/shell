@@ -5,22 +5,22 @@
 #include "list.h"
 
 enum state {
-    normal,
-    quote,
-    escape
+    state_normal,
+    state_quote,
+    state_escape
 };
 
 enum event {
-    quote_ch = '"',
-    escape_ch = '\\',
-    space_ch = ' ',
-    tab_ch = '\t',
-    nl_ch = '\n',
-    eof = EOF
+    event_quote = '"',
+    event_escape = '\\',
+    event_space = ' ',
+    event_tab = '\t',
+    event_newline = '\n',
+    event_eof = EOF
     /* default = any character */
 };
 
-typedef enum state (*processor)(enum event);
+typedef enum state (*handler)(enum event);
 
 void init_repl();
 

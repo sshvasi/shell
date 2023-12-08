@@ -9,13 +9,13 @@
 struct list *list;
 struct buffer *buff;
 
-enum event prev_ev, curr_ev;
-enum state prev_st = normal, curr_st = normal;
+enum event prev_event, curr_event;
+enum state prev_state = state_normal, curr_state = state_normal;
 
-static void process(enum event ev);
-static enum state process_normal(enum event ev);
-static enum state process_quote(enum event ev);
-static enum state process_escape(enum event ev);
+static void handle(enum event ev);
+static enum state handle_normal_state(enum event ev);
+static enum state handle_quote_state(enum event ev);
+static enum state handle_escape_state(enum event ev);
 
 void init_repl()
 {
@@ -28,109 +28,101 @@ void init_repl()
 
         int ch;
         while ((ch = getchar()) != '\n' && ch != EOF) {
-            process(ch);
+            handle(ch);
         }
 
         if (ch == '\n') {
-            process(ch);
+            handle(ch);
             continue;
         }
 
         if (ch == EOF) {
-            process(ch);
+            handle(ch);
             break;
         }
     }
 }
 
-static void process(enum event ev)
+static void handle(enum event ev)
 {
-    static const processor processors[] = {
-        process_normal,
-        process_quote,
-        process_escape
+    static const handler handlers[] = {
+        handle_normal_state,
+        handle_quote_state,
+        handle_escape_state
     };
 
-    prev_ev = curr_ev;
-    curr_ev = ev;
+    prev_event = curr_event;
+    curr_event = ev;
 
-    enum state tmp_st = curr_st;
-    curr_st = processors[curr_st](ev);
-    prev_st = tmp_st;
+    enum state temp_state = curr_state;
+    curr_state = handlers[curr_state](ev);
+    prev_state = temp_state;
 
-    if (prev_st != curr_st) {
-        const char *event_names[] = {
-            "normal",
-            "in a quote",
-            "escape sequence"
-        };
-
-        TRACE("[REPL] Transition [%s]->[%s].\n",
-              event_names[prev_st],
-              event_names[curr_st]);
+    if (prev_state != curr_state) {
+        TRACE("[REPL] Transition [%d]->[%d].\n", prev_state, curr_state);
     }
 }
 
-static enum state process_normal(enum event ev)
+static enum state handle_normal_state(enum event ev)
 {
     switch (ev) {
-        case quote_ch:
-            return quote;
-        case escape_ch:
-            return escape;
-        case nl_ch:
+        case event_quote:
+            return state_quote;
+        case event_escape:
+            return state_escape;
+        case event_newline:
             add_to_list(list, buff->store);
             empty_buffer(buff);
             print_list(list);
             empty_list(list);
-            return normal;
-        case space_ch:
-        case tab_ch:
+            return state_normal;
+        case event_space:
+        case event_tab:
             add_to_list(list, buff->store);
             empty_buffer(buff);
-            return normal;
+            return state_normal;
         case EOF:
             free_buffer(buff);
             free_list(list);
-            return normal;
+            return state_normal;
         default:
             add_to_buffer(buff, ev);
-            return normal;
+            return state_normal;
     }
 }
 
-static enum state process_quote(enum event ev)
+static enum state handle_quote_state(enum event ev)
 {
     switch (ev) {
-        case quote_ch:
-            return normal;
-        case escape_ch:
-            return escape;
-        case nl_ch:
+        case event_quote:
+            return state_normal;
+        case event_escape:
+            return state_escape;
+        case event_newline:
             fputs("Failed to parse a line: incorrect number of quotes.\n", stderr);
             empty_list(list);
-            return normal;
+            return state_normal;
         case EOF:
             free_buffer(buff);
             free_list(list);
-            return normal;
-        case space_ch:
-        case tab_ch:
+            return state_normal;
+        case event_space:
+        case event_tab:
         default:
             add_to_buffer(buff, ev);
-            return quote;
+            return state_quote;
     }
 }
 
-static enum state process_escape(enum event ev)
+static enum state handle_escape_state(enum event ev)
 {
     switch (ev) {
     case EOF:
         free_buffer(buff);
         free_list(list);
-        return normal;
+        return state_normal;
     default:
         add_to_buffer(buff, ev);
-        return prev_st;
+        return prev_state;
     }
 }
