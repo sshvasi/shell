@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "repl.h"
+#include "debug.h"
 #include "buffer.h"
+#include "repl.h"
 
 struct list *list;
 struct buffer *buff;
@@ -56,6 +57,18 @@ static void process(enum event ev)
     enum state tmp_st = curr_st;
     curr_st = processors[curr_st](ev);
     prev_st = tmp_st;
+
+    if (prev_st != curr_st) {
+        const char *event_names[] = {
+            "normal",
+            "in a quote",
+            "escape sequence"
+        };
+
+        TRACE("[REPL] Transition [%s]->[%s].\n",
+              event_names[prev_st],
+              event_names[curr_st]);
+    }
 }
 
 static enum state process_normal(enum event ev)
