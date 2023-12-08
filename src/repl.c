@@ -2,33 +2,23 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "analyser.h"
 #include "buffer.h"
 #include "list.h"
-#include "tokenizer.h"
+#include "prompt.h"
 #include "repl.h"
 
 void init_repl(struct list *ls, struct buffer *buff)
 {
-    while (true) {
-        fputs("> ", stdout);
-        fflush(stdout);
+    print_prompt(singleline_prompt);
 
-        int ch;
-        while ((ch = getchar()) != EOF) {
-            tokenize(ch, ls, buff);
-
-            if (ch == '\n') {
-                break;
-            }
-        }
-
-        if (ch == EOF) {
-            putchar('\n');
-
-            free_buffer(buff);
-            free_list(ls);
-
-            break;
-        }
+    int ch;
+    while ((ch = getchar()) != EOF) {
+        analyse(ch, ls, buff);
     }
+
+    putchar('\n');
+
+    free_buffer(buff);
+    free_list(ls);
 }

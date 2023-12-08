@@ -11,7 +11,7 @@ struct list *init_list()
     struct list *list;
     if ((list = malloc(sizeof(struct list))) == NULL) {
         perror("Failed to allocate memory for list.");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
     list->head = list->tail = NULL;
@@ -37,14 +37,14 @@ void add_to_list(struct list *list, const struct buffer *buff)
     struct node *new_node;
     if ((new_node = malloc(sizeof(struct node))) == NULL) {
         perror("Failed to allocate memory for new node.");
-        return;
+        exit(EXIT_FAILURE);
     }
 
 
     if ((new_node->word = malloc(buff->length)) == NULL) {
         free(new_node);
         perror("Failed to allocate memory for new word.");
-        return;
+        exit(EXIT_FAILURE);
     }
 
     new_node->next = NULL;
@@ -92,16 +92,16 @@ void free_list(struct list *list)
     free(list);
 }
 
-void print_list(struct list *list)
+void for_each_node(struct list *list, void (*handler)(struct node *))
 {
-    TRACE("[LIST] Print.\n");
+    TRACE("[LIST] For each.\n");
     if (list == NULL) {
-        fputs("Failed to print list: NULL pointer received.\n", stderr);
+        fputs("Failed to iterate over list: NULL pointer received.\n", stderr);
         return;
     }
 
     struct node *iter;
-
-    for (iter = list->head; iter; iter = iter->next)
-        printf("[%s]\n", iter->word);
+    for (iter = list->head; iter; iter = iter->next) {
+        (*handler)(iter);
+    }
 }

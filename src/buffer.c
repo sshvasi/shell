@@ -12,13 +12,13 @@ struct buffer *init_buffer()
     struct buffer *b;
     if ((b = malloc(sizeof(struct buffer))) == NULL) {
         perror("Failed to allocate memory for buffer.");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
     if ((b->store = malloc(BUFFER_SIZE + 1)) == NULL) {
         perror("Failed to allocate memory for buffer store.");
         free(b);
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
     b->store[0] = '\0';

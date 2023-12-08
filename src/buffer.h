@@ -10,8 +10,8 @@ struct buffer {
 };
 
 struct buffer *init_buffer();
-void add_to_buffer(struct buffer *b, int ch);
-void empty_buffer(struct buffer *b);
-void free_buffer(struct buffer *b);
+void add_to_buffer(struct buffer *, int ch);
+void empty_buffer(struct buffer *);
+void free_buffer(struct buffer *);
 
 #endif /* BUFFER_H */

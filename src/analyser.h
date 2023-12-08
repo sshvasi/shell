@@ -19,8 +19,8 @@ enum event {
  /* default       = any character */
 };
 
-typedef enum state (*handler)(enum event, struct list*, struct buffer*);
+typedef enum state (*handler)(enum event, struct list *, struct buffer *);
 
-void tokenize(enum event, struct list*, struct buffer*);
+void analyse(enum event, struct list *, struct buffer *);
 
 #endif /* TOKENIZER_H */
