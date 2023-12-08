@@ -16,16 +16,11 @@ enum event {
     event_space   = ' ',
     event_tab     = '\t',
     event_newline = '\n',
-    event_eof     = EOF
  /* default       = any character */
 };
 
-typedef enum state (*handler)(enum event,
-                              struct list*,
-                              struct buffer*);
+typedef enum state (*handler)(enum event, struct list*, struct buffer*);
 
-void tokenize(enum event ev,
-              struct list *ls,
-              struct buffer *buff);
+void tokenize(enum event, struct list*, struct buffer*);
 
 #endif /* TOKENIZER_H */

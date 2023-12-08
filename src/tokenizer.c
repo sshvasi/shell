@@ -9,17 +9,17 @@
 enum event prev_event, curr_event;
 enum state prev_state = state_normal, curr_state = state_normal;
 
-static enum state handle_normal_state(enum event ev,
+static enum state handle_normal_state(enum event next_event,
                                       struct list *ls,
                                       struct buffer *buff);
-static enum state handle_escape_state(enum event ev,
+static enum state handle_escape_state(enum event next_event,
                                       struct list *ls,
                                       struct buffer *buff);
-static enum state handle_quote_state(enum event ev,
+static enum state handle_quote_state(enum event next_event,
                                      struct list *ls,
                                      struct buffer *buff);
 
-void tokenize(enum event ev,
+void tokenize(enum event next_event,
               struct list *ls,
               struct buffer *buff)
 {
@@ -30,10 +30,10 @@ void tokenize(enum event ev,
     };
 
     prev_event = curr_event;
-    curr_event = ev;
+    curr_event = next_event;
 
     enum state temp_state = curr_state;
-    curr_state = handlers[curr_state](ev, ls, buff);
+    curr_state = handlers[curr_state](next_event, ls, buff);
     prev_state = temp_state;
 
     if (prev_state != curr_state) {
@@ -41,11 +41,11 @@ void tokenize(enum event ev,
     }
 }
 
-static enum state handle_normal_state(enum event ev,
+static enum state handle_normal_state(enum event next_event,
                                       struct list *ls,
                                       struct buffer *buff)
 {
-    switch (ev) {
+    switch (next_event) {
         case event_quote:
             return state_quote;
         case event_escape:
@@ -61,22 +61,17 @@ static enum state handle_normal_state(enum event ev,
             add_to_list(ls, buff);
             empty_buffer(buff);
             return state_normal;
-        case event_eof:
-            putchar('\n');
-            free_buffer(buff);
-            free_list(ls);
-            return state_normal;
         default:
-            add_to_buffer(buff, ev);
+            add_to_buffer(buff, next_event);
             return state_normal;
     }
 }
 
-static enum state handle_quote_state(enum event ev,
+static enum state handle_quote_state(enum event next_event,
                                      struct list *ls,
                                      struct buffer *buff)
 {
-    switch (ev) {
+    switch (next_event) {
         case event_quote:
             return state_normal;
         case event_escape:
@@ -85,33 +80,23 @@ static enum state handle_quote_state(enum event ev,
             fputs("Failed to parse a line: incorrect number of quotes.\n", stderr);
             empty_list(ls);
             return state_normal;
-        case event_eof:
-            putchar('\n');
-            free_buffer(buff);
-            free_list(ls);
-            return state_normal;
         case event_space:
         case event_tab:
         default:
-            add_to_buffer(buff, ev);
+            add_to_buffer(buff, next_event);
             return state_quote;
     }
 }
 
-static enum state handle_escape_state(enum event ev,
+static enum state handle_escape_state(enum event next_event,
                                       struct list *ls,
                                       struct buffer *buff)
 {
-    switch (ev) {
+    switch (next_event) {
     case event_newline:
         return state_normal;
-    case event_eof:
-        putchar('\n');
-        free_buffer(buff);
-        free_list(ls);
-        return state_normal;
     default:
-        add_to_buffer(buff, ev);
+        add_to_buffer(buff, next_event);
         return prev_state;
     }
 }

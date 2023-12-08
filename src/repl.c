@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 #include "buffer.h"
-#include "debug.h"
+#include "list.h"
 #include "tokenizer.h"
 #include "repl.h"
 
@@ -14,18 +14,20 @@ void init_repl(struct list *ls, struct buffer *buff)
         fflush(stdout);
 
         int ch;
-        while ((ch = getchar()) != '\n' && ch != EOF) {
+        while ((ch = getchar()) != EOF) {
             tokenize(ch, ls, buff);
-        }
 
-        if (ch == '\n') {
-            tokenize(ch, ls, buff);
-            continue;
+            if (ch == '\n') {
+                break;
+            }
         }
 
         if (ch == EOF) {
             putchar('\n');
-            tokenize(ch, ls, buff);
+
+            free_buffer(buff);
+            free_list(ls);
+
             break;
         }
     }
