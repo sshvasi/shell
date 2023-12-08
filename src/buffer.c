@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "debug.h"
+
 #include "buffer.h"
+#include "debug.h"
 
 struct buffer *init_buffer()
 {

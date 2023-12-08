@@ -2,6 +2,8 @@
 #define REPL_H
 
 #include <stdio.h>
+
+#include "buffer.h"
 #include "list.h"
 
 enum state {
@@ -20,8 +22,8 @@ enum event {
     /* default = any character */
 };
 
-typedef enum state (*handler)(enum event);
+typedef enum state (*handler)(enum event, struct list*, struct buffer*);
 
-void init_repl();
+void init_repl(struct list*, struct buffer*);
 
 #endif /* REPL_H */
