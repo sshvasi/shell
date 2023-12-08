@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -98,6 +97,8 @@ static enum state handle_escape_state(enum event ev,
                                       struct buffer *buff)
 {
     switch (ev) {
+    case event_newline:
+        return state_normal;
     case event_eof:
         free_buffer(buff);
         free_list(ls);
