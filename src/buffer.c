@@ -7,84 +7,94 @@
 
 struct buffer *init_buffer()
 {
+    struct buffer *buff;
+
     TRACE("[BUFFER] Initilize.\n");
 
-    struct buffer *b;
-    if ((b = malloc(sizeof(struct buffer))) == NULL) {
+    buff = malloc(sizeof(struct buffer));
+    if (buff == NULL) {
         perror("Failed to allocate memory for buffer.");
         exit(EXIT_FAILURE);
     }
 
-    if ((b->store = malloc(BUFFER_SIZE + 1)) == NULL) {
+    buff->store = malloc(BUFFER_CAPACITY + 1);
+    if (buff->store == NULL) {
         perror("Failed to allocate memory for buffer store.");
-        free(b);
+        free(buff);
         exit(EXIT_FAILURE);
     }
 
-    b->store[0] = '\0';
-    b->length = 0;
-    b->capacity = BUFFER_SIZE + 1;
+    buff->store[0] = '\0';
+    buff->length = 0;
+    buff->capacity = BUFFER_CAPACITY + 1;
 
-    return b;
+    return buff;
 }
 
-void resize_buffer(struct buffer *b)
+void resize_buffer(struct buffer *buff)
 {
-    TRACE("[BUFFER] Buffer is full with capacity %d. Resizing to %d.\n",
-          b->capacity, b->capacity * 2);
-
     char *new_store;
-    if ((new_store = malloc(b->capacity * 2)) == NULL) {
-        perror("Failed to allocate memory for buffer store during resizing.");
-        free_buffer(b);
-        exit(EXIT_FAILURE);
+
+    TRACE("[BUFFER] Buffer is full with capacity %d. Resizing to %d.\n",
+          buff->capacity, buff->capacity * 2);
+
+    if (buff == NULL) {
+        fputs("Failed to resize buffer: NULL pointer received.\n", stderr);
+        return;
     }
 
-    strcpy(new_store, b->store);
-    free(b->store);
-    b->store = new_store;
-    b->capacity *= 2;
+    new_store = malloc(buff->capacity * 2);
+    if (new_store == NULL) {
+        fputs("Failed to allocate memory for buffer store during resizing.\n", stderr);
+        empty_buffer(buff);
+        return;
+    }
+
+    strcpy(new_store, buff->store);
+    free(buff->store);
+    buff->store = new_store;
+    buff->capacity *= 2;
 }
 
-void add_to_buffer(struct buffer *b, int ch)
+void add_to_buffer(struct buffer *buff, int ch)
 {
-    TRACE("[BUFFER] Add '%c'\n", ch);
-
-    if (b == NULL) {
+    if (buff == NULL) {
         fputs("Failed to add to buffer: NULL pointer received.\n", stderr);
         return;
     }
 
-    if (b->length == b->capacity - 1) {
-        resize_buffer(b);
+    TRACE("[BUFFER] Add '%c'\n", ch);
+
+    if (buff->length == buff->capacity - 1) {
+        resize_buffer(buff);
     }
 
-    b->store[b->length++] = ch;
-    b->store[b->length] = '\0';
+    buff->store[buff->length++] = ch;
+    buff->store[buff->length] = '\0';
 }
 
-void empty_buffer(struct buffer *b)
+void empty_buffer(struct buffer *buff)
 {
-    TRACE("[BUFFER] Empty '%s'.\n", b->store);
-
-    if (b == NULL) {
+    if (buff == NULL) {
         fputs("Failed to empty buffer: NULL pointer received.\n", stderr);
         return;
     }
 
-    b->length = 0;
-    b->store[0] = '\0';
+    TRACE("[BUFFER] Empty '%s'.\n", buff->store);
+
+    buff->length = 0;
+    buff->store[0] = '\0';
 }
 
-void free_buffer(struct buffer *b)
+void free_buffer(struct buffer *buff)
 {
-    TRACE("[BUFFER] Free '%s'.\n", b->store);
-
-    if (b == NULL) {
+    if (buff == NULL) {
         fputs("Failed to free buffer: NULL pointer received.\n", stderr);
         return;
     }
 
-    free(b->store);
-    free(b);
+    TRACE("[BUFFER] Free '%s'.\n", buff->store);
+
+    free(buff->store);
+    free(buff);
 }

@@ -19,8 +19,23 @@ enum event {
  /* default       = any character */
 };
 
-typedef enum state (*handler)(enum event, struct list *, struct buffer *);
+struct analyser {
+    struct buffer *chars;
+    struct list *tokens;
+    struct {
+        enum state curr;
+        enum state prev;
+    } *states;
+    struct {
+        enum event curr;
+        enum event prev;
+    } *events;
+};
 
-void analyse(enum event, struct list *, struct buffer *);
+typedef enum state (*handler)(struct analyser *, enum event);
+
+struct analyser *init_analyser(struct buffer *, struct list *);
+void free_analyser(struct analyser *an);
+void analyse(struct analyser *, enum event);
 
 #endif /* ANALYSER_H */

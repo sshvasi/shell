@@ -8,46 +8,79 @@
 #include "list.h"
 #include "prompt.h"
 
-enum event prev_event, curr_event;
-enum state prev_state = state_normal, curr_state = state_normal;
+static enum state handle_normal_state(struct analyser *an, enum event next_event);
+static enum state handle_escape_state(struct analyser *an, enum event next_event);
+static enum state handle_quote_state(struct analyser *an, enum event next_event);
 
-static enum state handle_normal_state(enum event next_event,
-                                      struct list *ls,
-                                      struct buffer *buff);
-static enum state handle_escape_state(enum event next_event,
-                                      struct list *ls,
-                                      struct buffer *buff);
-static enum state handle_quote_state(enum event next_event,
-                                     struct list *ls,
-                                     struct buffer *buff);
-
-void analyse(enum event next_event,
-             struct list *ls,
-             struct buffer *buff)
+struct analyser *init_analyser(struct buffer *chars, struct list *tokens)
 {
-    static handler handlers[] = {
+    struct analyser *an;
+
+    TRACE("[ANALYSER] Initilize.\n");
+
+    an = malloc(sizeof(struct analyser));
+    if (an == NULL) {
+        perror("Failed to allocate memory for analyser.");
+        exit(EXIT_FAILURE);
+    }
+
+    an->chars = chars;
+    an->tokens = tokens;
+
+    an->states = malloc(sizeof(enum state) * 2);
+    if (an->states == NULL) {
+        perror("Failed to allocate memory for analyser states.");
+        exit(EXIT_FAILURE);
+    }
+
+    an->events = malloc(sizeof(enum event) * 2);
+    if (an->events == NULL) {
+        perror("Failed to allocate memory for analyser events.");
+        exit(EXIT_FAILURE);
+    }
+
+    return an;
+}
+
+void free_analyser(struct analyser *an)
+{
+    TRACE("[ANALYSER] Free.\n");
+
+    if (an == NULL) {
+        return;
+    }
+
+    if (an->events != NULL) {
+        free(an->events);
+    }
+
+    if (an->states != NULL) {
+        free(an->states);
+    }
+
+    free_buffer(an->chars);
+    free_list(an->tokens);
+
+    free(an);
+}
+
+void analyse(struct analyser *an, enum event next_event)
+{
+    const static handler handlers[] = {
         handle_normal_state,
         handle_quote_state,
         handle_escape_state
     };
 
-    prev_event = curr_event;
-    curr_event = next_event;
+    an->events->prev = an->events->curr;
+    an->events->curr = next_event;
 
-    enum state temp_state = curr_state;
-    curr_state = handlers[curr_state](next_event, ls, buff);
-    prev_state = temp_state;
-
-    /**
-     * if (prev_state != curr_state) {
-     *     TRACE("[REPL] Transition [%d]->[%d].\n", prev_state, curr_state);
-     * }
-    */
+    enum state temp_state = an->states->curr;
+    an->states->curr = handlers[an->states->curr](an, next_event);
+    an->states->prev = temp_state;
 }
 
-static enum state handle_normal_state(enum event next_event,
-                                      struct list *ls,
-                                      struct buffer *buff)
+static enum state handle_normal_state(struct analyser *an, enum event next_event)
 {
     switch (next_event) {
         case event_quote:
@@ -55,26 +88,24 @@ static enum state handle_normal_state(enum event next_event,
         case event_escape:
             return state_escape;
         case event_newline:
-            add_to_list(ls, buff);
-            execute(ls, buff);
-            empty_buffer(buff);
-            empty_list(ls);
+            add_to_list(an->tokens, an->chars);
+            execute(an);
+            empty_buffer(an->chars);
+            empty_list(an->tokens);
             print_prompt(singleline_prompt);
             return state_normal;
         case event_space:
         case event_tab:
-            add_to_list(ls, buff);
-            empty_buffer(buff);
+            add_to_list(an->tokens, an->chars);
+            empty_buffer(an->chars);
             return state_normal;
         default:
-            add_to_buffer(buff, next_event);
+            add_to_buffer(an->chars, next_event);
             return state_normal;
     }
 }
 
-static enum state handle_quote_state(enum event next_event,
-                                     struct list *ls,
-                                     struct buffer *buff)
+static enum state handle_quote_state(struct analyser *an, enum event next_event)
 {
     switch (next_event) {
         case event_quote:
@@ -83,29 +114,31 @@ static enum state handle_quote_state(enum event next_event,
             return state_escape;
         case event_newline:
             fputs("Failed to parse a line: incorrect number of quotes.\n", stderr);
-            empty_buffer(buff);
-            empty_list(ls);
+            empty_buffer(an->chars);
+            empty_list(an->tokens);
             print_prompt(singleline_prompt);
             return state_normal;
         case event_space:
         case event_tab:
         default:
-            add_to_buffer(buff, next_event);
+            add_to_buffer(an->chars, next_event);
             return state_quote;
     }
 }
 
-static enum state handle_escape_state(enum event next_event,
-                                      struct list *ls,
-                                      struct buffer *buff)
+static enum state handle_escape_state(struct analyser *an, enum event next_event)
 {
     switch (next_event) {
     case event_newline:
         print_prompt(multiline_prompt);
-        return state_normal;
+        return an->states->prev;
+    case event_quote:
+    case event_space:
+    case event_tab:
+    case event_escape:
     default:
-        add_to_buffer(buff, next_event);
-        return prev_state;
+        add_to_buffer(an->chars, next_event);
+        return an->states->prev;
     }
 }
 

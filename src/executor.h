@@ -1,9 +1,8 @@
 #ifndef EXECUTOR_H
 #define EXECUTOR_H
 
-#include "buffer.h"
-#include "list.h"
+#include "analyser.h"
 
-void execute(struct list *, struct buffer *);
+void execute(struct analyser *);
 
 #endif /* EXECUTOR_H */

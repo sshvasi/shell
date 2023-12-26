@@ -1,7 +1,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-#define BUFFER_SIZE 1024
+#define BUFFER_CAPACITY 1024
 
 struct buffer {
     char *store;

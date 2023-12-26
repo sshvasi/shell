@@ -8,24 +8,32 @@
 
 struct list *init_list()
 {
-    struct list *list;
-    if ((list = malloc(sizeof(struct list))) == NULL) {
-        perror("Failed to allocate memory for list.");
-        exit(EXIT_FAILURE);
-    }
-
-    list->head = list->tail = NULL;
+    struct list *ls;
 
     TRACE("[LIST] Initilize.\n");
 
-    return list;
+    ls = malloc(sizeof(struct list));
+    if (ls == NULL) {
+        perror("Failed to allocate memory for ls.");
+        exit(EXIT_FAILURE);
+    }
+
+    ls->head = ls->tail = NULL;
+
+    return ls;
 }
 
-void add_to_list(struct list *list, struct buffer *buff)
+void add_to_list(struct list *ls, struct buffer *buff)
 {
-    TRACE("[LIST] Add '%s'.\n", buff->store);
-    if (list == NULL) {
-        fputs("Failed to add to list: NULL pointer received.\n", stderr);
+    struct node *new_node;
+
+    if (ls == NULL) {
+        TRACE("[LIST] Failed to add to list: NULL pointer received.\n");
+        return;
+    }
+
+    if (buff == NULL) {
+        TRACE("[LIST] Failed to add to list: NULL pointer received for buffer.\n");
         return;
     }
 
@@ -34,46 +42,45 @@ void add_to_list(struct list *list, struct buffer *buff)
         return;
     }
 
-    struct node *new_node;
-    if ((new_node = malloc(sizeof(struct node))) == NULL) {
+    TRACE("[LIST] Add '%s'.\n", buff->store);
+
+    new_node = malloc(sizeof(struct node));
+    if (new_node == NULL) {
         perror("Failed to allocate memory for new node.");
-        free_buffer(buff);
-        free_list(list);
-        exit(EXIT_FAILURE);
+        return;
     }
 
-
-    if ((new_node->token = malloc(buff->length + 1)) == NULL) {
-        perror("Failed to allocate memory for new word.");
-        free_buffer(buff);
+    new_node->token = malloc(buff->length + 1);
+    if (new_node == NULL) {
+        perror("Failed to allocate memory for new token.");
         free(new_node);
-        free_list(list);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     new_node->next = NULL;
     strcpy(new_node->token, buff->store);
 
-    if (list->head == NULL) {
-        list->head = list->tail = new_node;
+    if (ls->head == NULL) {
+        ls->head = ls->tail = new_node;
     } else {
-        list->tail->next = new_node;
-        list->tail = new_node;
+        ls->tail->next = new_node;
+        ls->tail = new_node;
     }
 }
 
-void empty_list(struct list *list)
+void empty_list(struct list *ls)
 {
-    if (list == NULL) {
+    struct node *curr;
+    struct node *next;
+
+    TRACE("[LIST] Empty.\n");
+
+    if (ls == NULL) {
         fputs("Failed to empty list: NULL pointer received.\n", stderr);
         return;
     }
 
-    struct node *curr = list->head;
-    struct node *next;
-
-    TRACE("[LIST] Empty%c\n", curr == NULL ? '.' : ':');
-
+    curr = ls->head;
     while (curr != NULL) {
         next = curr->next;
         TRACE("\tFree node '%s'.\n", curr->token);
@@ -82,30 +89,32 @@ void empty_list(struct list *list)
         curr = next;
     }
 
-    list->head = NULL;
+    ls->head = NULL;
 }
 
-void free_list(struct list *list)
+void free_list(struct list *ls)
 {
     TRACE("[LIST] Free.\n");
-    if (list == NULL) {
+
+    if (ls == NULL) {
         fputs("Failed to free list: NULL pointer received.\n", stderr);
         return;
     }
 
-    empty_list(list);
-    free(list);
+    empty_list(ls);
+    free(ls);
 }
 
-void for_each_node(struct list *list, void (*handler)(struct node *))
+void for_each_node(struct list *ls, void (*handler)(struct node *))
 {
-    if (list == NULL) {
+    struct node *curr;
+
+    if (ls == NULL) {
         fputs("Failed to iterate over list: NULL pointer received.\n", stderr);
         return;
     }
 
-    struct node *curr;
-    for (curr = list->head; curr != NULL; curr = curr->next) {
+    for (curr = ls->head; curr != NULL; curr = curr->next) {
         (*handler)(curr);
     }
 }

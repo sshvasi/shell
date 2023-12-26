@@ -9,22 +9,25 @@
 #include "prompt.h"
 
 int main(void) {
-    struct list *ls = init_list();
-    struct buffer *buff = init_buffer();
+    struct analyser *an;
+    int ch;
+
+    an = init_analyser(
+        init_buffer(),
+        init_list()
+    );
 
     print_prompt(singleline_prompt);
 
-    int ch;
     while ((ch = getchar()) != EOF) {
-        analyse(ch, ls, buff);
+        analyse(an, ch);
     }
 
     putchar('\n');
 
     TRACE("[MAIN] EOF. Clean up memory.\n");
 
-    free_buffer(buff);
-    free_list(ls);
+    free_analyser(an);
 
     return EXIT_SUCCESS;
 }
