@@ -24,20 +24,23 @@ struct analyser *init_analyser(struct buffer *chars, struct list *tokens)
         exit(EXIT_FAILURE);
     }
 
-    an->chars = chars;
-    an->tokens = tokens;
-
     an->states = malloc(sizeof(enum state) * 2);
     if (an->states == NULL) {
         perror("Failed to allocate memory for analyser states.");
+        free(an);
         exit(EXIT_FAILURE);
     }
 
     an->events = malloc(sizeof(enum event) * 2);
     if (an->events == NULL) {
         perror("Failed to allocate memory for analyser events.");
+        free(an->states);
+        free(an);
         exit(EXIT_FAILURE);
     }
+
+    an->chars = chars;
+    an->tokens = tokens;
 
     return an;
 }
