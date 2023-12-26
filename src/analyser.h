@@ -35,7 +35,7 @@ struct analyser {
 typedef enum state (*handler)(struct analyser *, enum event);
 
 struct analyser *init_analyser(struct buffer *, struct list *);
-void free_analyser(struct analyser *an);
+void free_analyser(struct analyser *);
 void analyse(struct analyser *, enum event);
 
 #endif /* ANALYSER_H */
